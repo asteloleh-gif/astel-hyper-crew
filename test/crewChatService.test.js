@@ -110,3 +110,14 @@ test("rejects chat without API key", async () => {
   });
   await assert.rejects(() => service.chat({ text: "hello" }), /OPENAI_API_KEY_NOT_CONFIGURED/);
 });
+
+
+test("Kevin receives the authoritative enabled crew roster", async () => {
+  const { service, calls } = fixture();
+  await service.chat({ text: "Кевин кто у нас в команде?" });
+  const roster = calls[0].input.crewRoster;
+  assert.ok(Array.isArray(roster));
+  assert.ok(roster.some(agent => agent.name === "Tommy the Googler" && agent.id === "researcher"));
+  assert.ok(roster.some(agent => agent.name === "Yuki Pixel" && agent.id === "visual"));
+  assert.ok(roster.some(agent => agent.name === "Vasya Free Tier Hustler" && agent.id === "router-parser"));
+});
