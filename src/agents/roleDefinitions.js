@@ -14,18 +14,19 @@ Do not publish, message users or call external mutation services.
 Return only the structured output required by your schema.
 `.trim();
 
-function buildAgentDefinitions({ Agent, webSearchTool, env = process.env } = {}) {
+function buildAgentDefinitions({ Agent, webSearchTool, env = process.env, skillRegistry = null } = {}) {
   const models = {
     reasoning: env.AI_MODEL_REASONING || "gpt-5.4-mini",
     standard: env.AI_MODEL_STANDARD || "gpt-5.4-mini",
     cheap: env.AI_MODEL_CHEAP || "gpt-5.4-nano",
   };
+  const brain = agentId => skillRegistry?.buildPermanentContext?.(agentId)?.context || "";
 
   return new Map([
     ["researcher", new Agent({
       name: "Tommy the Googler",
       model: models.reasoning,
-      instructions: `${COMMON_RULES}\nFind timely, relevant evidence for the objective. Use web search when fresh information is needed. Every factual finding must reference one or more returned source IDs. Return every source URL as a complete absolute http:// or https:// URL. If evidence is weak or unavailable, record the gap instead of guessing.`,
+      instructions: `${COMMON_RULES}\n${brain("distribution-manager")}\n${brain("reviewer")}\n${brain("copywriter")}\n${brain("strategist")}\n${brain("researcher")}\nFind timely, relevant evidence for the objective. Use web search when fresh information is needed. Every factual finding must reference one or more returned source IDs. Return every source URL as a complete absolute http:// or https:// URL. If evidence is weak or unavailable, record the gap instead of guessing.`,
       tools: [webSearchTool({ searchContextSize: "medium" })],
       outputType: ResearchOutputSchema,
     })],
