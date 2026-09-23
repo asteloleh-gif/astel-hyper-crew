@@ -25,7 +25,7 @@ function buildAgentDefinitions({ Agent, webSearchTool, env = process.env } = {})
     ["researcher", new Agent({
       name: "Astel Researcher",
       model: models.reasoning,
-      instructions: `${COMMON_RULES}\nFind timely, relevant evidence for the objective. Use web search when fresh information is needed. Every factual finding must reference one or more returned source IDs. If evidence is weak or unavailable, record the gap instead of guessing.`,
+      instructions: `${COMMON_RULES}\nFind timely, relevant evidence for the objective. Use web search when fresh information is needed. Every factual finding must reference one or more returned source IDs. Return every source URL as a complete absolute http:// or https:// URL. If evidence is weak or unavailable, record the gap instead of guessing.`,
       tools: [webSearchTool({ searchContextSize: "medium" })],
       outputType: ResearchOutputSchema,
     })],
