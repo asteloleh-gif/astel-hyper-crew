@@ -1,3 +1,4 @@
+const { createEdieTools } = require("../analytics/edieTools");
 const ROLE_INSTRUCTIONS = Object.freeze({
   orchestrator: "You are the CEO/orchestrator. Help the owner frame the task, choose which crew member should handle it, and coordinate a plan. The input payload contains crewRoster with the authoritative enabled team. When asked who is on the team, what roles exist, or who should handle something, use crewRoster exactly and never invent generic departments or unnamed roles. You may recommend a full Hyper Crew run, but do not pretend that a run or external action happened inside chat.",
   researcher: "You are the researcher. Find timely, relevant evidence when needed, distinguish evidence from inference, and cite links returned by web search. If fresh research is not needed, answer directly.",
@@ -6,7 +7,7 @@ const ROLE_INSTRUCTIONS = Object.freeze({
   reviewer: "You are QA/reviewer. Inspect the supplied work for unsupported claims, ambiguity, platform fit, duplication and execution risk. Give concrete fixes rather than vague criticism.",
   "distribution-manager": "You are the distribution manager. Recommend where and how to distribute content. Do not claim anything was posted or scheduled unless the user explicitly supplies that result.",
   visual: "You are the visual designer. Develop visual concepts, shot lists, thumbnail ideas, prompts, composition and creative direction. When the owner explicitly asks you to make, generate, render, draw, or provide a finished visual, use the image generator and return the actual image instead of only a prompt.",
-  analytics: "You are the analytics specialist. Analyze only metrics or datasets that are actually supplied. Separate observations from hypotheses and ask for missing data when a conclusion depends on it.",
+  analytics: "You are Edie Dataman, the analytics specialist. Use the analytics tools as the source of truth for Astel performance, costs and agent usage. Separate observation from causal hypothesis. Never invent missing metrics. If a source is stale or not configured, say so explicitly.",
   "router-parser": "You are the routing/parser specialist. Turn messy requests into clean structured tasks, fields, routing decisions and deterministic preprocessing instructions. Prefer cheap, simple transformations.",
 });
 
@@ -52,6 +53,7 @@ function createCrewChatService({
   agentRegistry,
   projectRegistry,
   skillRegistry = null,
+  analyticsService = null,
   imageGenerator = null,
   env = process.env,
   sdkLoader = () => import("@openai/agents"),
@@ -121,6 +123,9 @@ function createCrewChatService({
 
     const sdk = await loadSdk();
     const tools = [];
+    if (target.id === "analytics" && analyticsService) {
+      tools.push(...createEdieTools({ sdk, analyticsService }));
+    }
     const vectorStoreIds = String(env.ASTEL_KNOWLEDGE_VECTOR_STORE_ID || "")
       .split(",")
       .map(value => value.trim())
@@ -199,6 +204,7 @@ function createCrewChatService({
       },
     };
 
+    const startedAt = Date.now();
     const result = await sdk.run(runtimeAgent, JSON.stringify(payload), {
       maxTurns: Number(env.AI_MAX_TURNS_PER_AGENT || 4),
       context: { projectId, agentId: target.id, mode: "crew-chat" },
@@ -206,6 +212,29 @@ function createCrewChatService({
 
     if (result.finalOutput == null) throw new Error("CHAT_AGENT_RETURNED_NO_OUTPUT");
     const usage = result.state?.usage || result.runContext?.usage || {};
+    const telemetry = {
+      model: runtimeAgent.model,
+      requests: Number(usage.requests || 0),
+      inputTokens: Number(usage.inputTokens || 0),
+      cachedInputTokens: Number(usage.cachedInputTokens || usage.inputTokensDetails?.cachedTokens || usage.inputTokensDetails?.cached_tokens || 0),
+      outputTokens: Number(usage.outputTokens || 0),
+      totalTokens: Number(usage.totalTokens || 0),
+      activatedSkills: skillContext.selectedSkills.map(skill => skill.id),
+      fileSearchEnabled,
+      webSearchEnabled,
+    };
+    if (analyticsService?.recordAgentExecution) {
+      await analyticsService.recordAgentExecution({
+        runId: null,
+        projectId,
+        agentId: target.id,
+        model: runtimeAgent.model,
+        telemetry,
+        latencyMs: Date.now() - startedAt,
+        source: "crew-chat",
+        service: "astel-hyper-crew",
+      }).catch(() => {});
+    }
     return {
       target: {
         id: target.id,
@@ -216,16 +245,7 @@ function createCrewChatService({
       matchedAlias: match?.matchedAlias || null,
       reply: String(result.finalOutput),
       artifacts: [],
-      telemetry: {
-        model: runtimeAgent.model,
-        requests: Number(usage.requests || 0),
-        inputTokens: Number(usage.inputTokens || 0),
-        outputTokens: Number(usage.outputTokens || 0),
-        totalTokens: Number(usage.totalTokens || 0),
-        activatedSkills: skillContext.selectedSkills.map(skill => skill.id),
-        fileSearchEnabled,
-        webSearchEnabled,
-      },
+      telemetry,
     };
   }
 

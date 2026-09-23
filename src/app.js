@@ -8,6 +8,8 @@ function createApp({
   skillRegistry,
   agentExecutor,
   crewChatService,
+  analyticsService = null,
+  analyticsScheduler = null,
   apiToken = "",
 } = {}) {
   const app = express();
@@ -18,6 +20,8 @@ function createApp({
     service: "astel-hyper-crew",
     version: "0.4.1",
     agents: agentExecutor?.health?.() || null,
+    analytics: analyticsService?.health?.() || null,
+    analyticsSync: analyticsScheduler?.health?.() || null,
   }));
 
   app.use("/v1", (req, res, next) => {
@@ -59,6 +63,35 @@ function createApp({
   });
 
   app.get("/v1/connectors", (_req, res) => res.json({ connectors: connectorRegistry.list() }));
+
+  app.get("/v1/analytics/overview", async (req, res, next) => {
+    try { res.json(await analyticsService.overview({ days: req.query.days, projectId: req.query.projectId || null })); }
+    catch (e) { next(e); }
+  });
+  app.get("/v1/analytics/costs", async (req, res, next) => {
+    try { res.json(await analyticsService.costs({ days: req.query.days, projectId: req.query.projectId || null, agentId: req.query.agentId || null, source: req.query.source || null, groupBy: req.query.groupBy || "agent" })); }
+    catch (e) { next(e); }
+  });
+  app.get("/v1/analytics/agents", async (req, res, next) => {
+    try { res.json(await analyticsService.agents({ days: req.query.days, projectId: req.query.projectId || null })); }
+    catch (e) { next(e); }
+  });
+  app.get("/v1/analytics/content", async (req, res, next) => {
+    try { res.json(await analyticsService.content({ days: req.query.days, projectId: req.query.projectId || null, limit: req.query.limit })); }
+    catch (e) { next(e); }
+  });
+  app.post("/v1/analytics/sync", async (req, res, next) => {
+    try { res.json(await analyticsService.sync(req.body || {})); }
+    catch (e) { next(e); }
+  });
+  app.post("/v1/analytics/ingest", async (req, res, next) => {
+    try { res.status(201).json(await analyticsService.ingestBatch(req.body || {})); }
+    catch (e) { next(e); }
+  });
+  app.post("/v1/analytics/bindings", async (req, res, next) => {
+    try { res.status(201).json(await analyticsService.bindContent(req.body || {})); }
+    catch (e) { next(e); }
+  });
   app.get("/v1/runs", async (_req, res, next) => {
     try { res.json({ runs: await orchestrator.listRuns() }); } catch (e) { next(e); }
   });
