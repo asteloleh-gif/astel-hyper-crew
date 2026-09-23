@@ -25,8 +25,8 @@ function shouldGenerateImage(text) {
   const normalized = String(text || "").toLowerCase().replaceAll("ё", "е");
   if (!normalized) return false;
   return [
-    /\b(сделай|создай|нарисуй|сгенерируй|отрендери|рендерни)\b/,
-    /\b(готовый|готовую|готовое|готового)\b/,
+    /(сделай|создай|нарисуй|сгенерируй|отрендери|рендерни)/,
+    /(готовый|готовую|готовое|готового)/,
     /\b(generate|create|make|draw|render|design)\b/,
   ].some(pattern => pattern.test(normalized));
 }
