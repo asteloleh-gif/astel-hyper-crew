@@ -45,6 +45,7 @@ function createOpenAiAgentExecutor({
         model: runtimeAgent.model,
         requests: Number(usage.requests || 0),
         inputTokens: Number(usage.inputTokens || 0),
+        cachedInputTokens: Number(usage.cachedInputTokens || usage.inputTokensDetails?.cachedTokens || usage.inputTokensDetails?.cached_tokens || 0),
         outputTokens: Number(usage.outputTokens || 0),
         totalTokens: Number(usage.totalTokens || 0),
       },
