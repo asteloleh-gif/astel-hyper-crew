@@ -13,7 +13,11 @@ async function main() {
     : createInMemoryRunStore();
   await store.init();
   const projectRegistry = createProjectRegistry();
-  const agentRegistry = createAgentRegistry();
+  const savedAgentProfiles = await store.listAgentProfiles();
+  const agentRegistry = createAgentRegistry({
+    overrides: savedAgentProfiles,
+    onSave: agent => store.saveAgentProfile(agent),
+  });
   const connectorRegistry = createConnectorRegistry();
   const agentExecutor = createOpenAiAgentExecutor();
   const orchestrator = createHyperCrewOrchestrator({
