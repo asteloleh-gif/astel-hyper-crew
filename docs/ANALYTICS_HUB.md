@@ -41,8 +41,10 @@ Set `SOCIAL_ANALYTICS_BASE_URL` and `SOCIAL_ANALYTICS_TOKEN`.
 The connector imports stored platform insight snapshots, community activity and durable AI-run costs.
 
 ### YouTube
-Set `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, and `YOUTUBE_REFRESH_TOKEN`.
-The connector uses a read-only OAuth refresh flow, reads channel/video analytics, and enriches video rows with Data API metadata.
+
+Preferred path is Windsor.ai because Astel Family is already connected there. Set `WINDSOR_API_KEY` and leave `YOUTUBE_ANALYTICS_PROVIDER=auto` (or set it to `windsor`). The connector reads the connected Astel Family account, aggregates daily rows per video, and imports views, engaged views, watch time, retention, engagement and subscriber movement.
+
+A direct Google OAuth connector remains available as a fallback. Set `YOUTUBE_ANALYTICS_PROVIDER=google` plus `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, and `YOUTUBE_REFRESH_TOKEN`.
 
 ### Generic ingestion
 Other engines can push normalized batches through authenticated `POST /v1/analytics/ingest`. This is the integration seam for Distribution, PostHog rollups, Video Editor plans and future revenue sources.

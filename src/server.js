@@ -14,6 +14,7 @@ const { createInMemoryAnalyticsRepository } = require("./analytics/inMemoryAnaly
 const { createAnalyticsService } = require("./analytics/analyticsService");
 const { createSocialEngineAnalyticsConnector } = require("./analytics/connectors/socialEngineConnector");
 const { createYouTubeAnalyticsConnector } = require("./analytics/connectors/youtubeConnector");
+const { createWindsorYouTubeAnalyticsConnector } = require("./analytics/connectors/windsorYouTubeConnector");
 const { createAnalyticsSyncScheduler } = require("./analytics/syncScheduler");
 
 async function main() {
@@ -26,9 +27,17 @@ async function main() {
     ? createPostgresAnalyticsRepository({ connectionString: process.env.DATABASE_URL })
     : createInMemoryAnalyticsRepository();
   await analyticsRepository.init();
+  const youtubeProvider = String(process.env.YOUTUBE_ANALYTICS_PROVIDER || "auto").toLowerCase();
+  const youtubeConnector = youtubeProvider === "google"
+    ? createYouTubeAnalyticsConnector()
+    : youtubeProvider === "windsor"
+      ? createWindsorYouTubeAnalyticsConnector()
+      : process.env.WINDSOR_API_KEY
+        ? createWindsorYouTubeAnalyticsConnector()
+        : createYouTubeAnalyticsConnector();
   const analyticsConnectors = [
     createSocialEngineAnalyticsConnector(),
-    createYouTubeAnalyticsConnector(),
+    youtubeConnector,
   ];
   const analyticsService = createAnalyticsService({ repository: analyticsRepository, connectors: analyticsConnectors });
   const analyticsScheduler = createAnalyticsSyncScheduler({ analyticsService });
