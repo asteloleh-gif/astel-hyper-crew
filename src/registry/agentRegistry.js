@@ -112,7 +112,7 @@ const DEFAULT_AGENTS = Object.freeze([
     role: "Analytics",
     description: "Reads performance data and turns metrics into concise findings and next actions.",
     mention: "@eddie",
-    aliases: ["edie", "edie dataman", "eddie", "eddie dataman", "эди", "эдди", "эдик", "analytics", "аналитик", "аналитика"],
+    aliases: ["edie", "edie dataman", "edita", "eddie", "eddie dataman", "эди", "эдди", "эдик", "эдита", "едита", "analytics", "аналитик", "аналитика"],
     modelTier: "standard",
     wave: "next",
     enabled: true,
