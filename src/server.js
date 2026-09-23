@@ -7,6 +7,7 @@ const { createPostgresRunStore } = require("./storage/postgresRunStore");
 const { createOpenAiAgentExecutor } = require("./executors/openAiAgentExecutor");
 const { createHyperCrewOrchestrator } = require("./orchestrator/hyperCrewOrchestrator");
 const { createCrewChatService } = require("./chat/crewChatService");
+const { createImageGenerator } = require("./media/imageGenerator");
 
 async function main() {
   const store = process.env.DATABASE_URL
@@ -22,7 +23,8 @@ async function main() {
   });
   const connectorRegistry = createConnectorRegistry();
   const agentExecutor = createOpenAiAgentExecutor();
-  const crewChatService = createCrewChatService({ agentRegistry, projectRegistry });
+  const imageGenerator = createImageGenerator();
+  const crewChatService = createCrewChatService({ agentRegistry, projectRegistry, imageGenerator });
 
   const orchestrator = createHyperCrewOrchestrator({
     store,

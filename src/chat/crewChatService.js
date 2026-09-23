@@ -5,7 +5,7 @@ const ROLE_INSTRUCTIONS = Object.freeze({
   copywriter: "You are the writer. Produce concise, usable copy in the user's language and requested platform style. Preserve facts and do not invent numbers.",
   reviewer: "You are QA/reviewer. Inspect the supplied work for unsupported claims, ambiguity, platform fit, duplication and execution risk. Give concrete fixes rather than vague criticism.",
   "distribution-manager": "You are the distribution manager. Recommend where and how to distribute content. Do not claim anything was posted or scheduled unless the user explicitly supplies that result.",
-  visual: "You are the visual designer. Develop visual concepts, shot lists, thumbnail ideas, prompts, composition and creative direction. In chat you plan visual work; do not claim an image was generated unless an image tool actually ran.",
+  visual: "You are the visual designer. Develop visual concepts, shot lists, thumbnail ideas, prompts, composition and creative direction. When the owner explicitly asks you to make, generate, render, draw, or provide a finished visual, use the image generator and return the actual image instead of only a prompt.",
   analytics: "You are the analytics specialist. Analyze only metrics or datasets that are actually supplied. Separate observations from hypotheses and ask for missing data when a conclusion depends on it.",
   "router-parser": "You are the routing/parser specialist. Turn messy requests into clean structured tasks, fields, routing decisions and deterministic preprocessing instructions. Prefer cheap, simple transformations.",
 });
@@ -21,9 +21,37 @@ function compactHistory(history) {
     .filter(item => item.text);
 }
 
+function shouldGenerateImage(text) {
+  const normalized = String(text || "").toLowerCase().replaceAll("ё", "е");
+  if (!normalized) return false;
+  return [
+    /(сделай|создай|нарисуй|сгенерируй|отрендери|рендерни)/,
+    /(готовый|готовую|готовое|готового)/,
+    /\b(generate|create|make|draw|render|design)\b/,
+  ].some(pattern => pattern.test(normalized));
+}
+
+function buildImagePrompt({ project, history, message }) {
+  const context = compactHistory(history)
+    .slice(-8)
+    .map(item => `${item.role === "assistant" ? "Assistant/Yuki" : "Owner"}: ${item.text}`)
+    .join("\n");
+
+  return [
+    "Create the finished visual asset requested by the owner.",
+    "You are Yuki Pixel, the visual designer in Astel Hyper Crew.",
+    "Return the visual itself. Do not create a mockup unless the owner asks for one.",
+    "Do not add explanatory labels, captions, watermarks, or extra text unless explicitly requested.",
+    `Project: ${project?.name || project?.id || "Astel"}.`,
+    context ? `Relevant conversation context:\n${context}` : "",
+    `Latest owner request: ${message}`,
+  ].filter(Boolean).join("\n\n");
+}
+
 function createCrewChatService({
   agentRegistry,
   projectRegistry,
+  imageGenerator = null,
   env = process.env,
   sdkLoader = () => import("@openai/agents"),
 } = {}) {
@@ -55,6 +83,38 @@ function createCrewChatService({
     const target = match?.agent || agentRegistry.get("orchestrator");
     if (!target || target.enabled === false) throw new Error("CHAT_AGENT_UNAVAILABLE");
 
+    const routedMessage = match?.remainder || message;
+
+    if (target.id === "visual" && shouldGenerateImage(routedMessage)) {
+      if (!imageGenerator?.generate) throw new Error("IMAGE_GENERATOR_NOT_CONFIGURED");
+      const artifact = await imageGenerator.generate({
+        prompt: buildImagePrompt({
+          project,
+          history,
+          message: routedMessage,
+        }),
+      });
+      return {
+        target: {
+          id: target.id,
+          name: target.name,
+          title: target.title,
+          mention: target.mention,
+        },
+        matchedAlias: match?.matchedAlias || null,
+        reply: "Готово — вот визуал.",
+        artifacts: [artifact],
+        telemetry: {
+          model: artifact.model,
+          requests: 1,
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          imageUsage: artifact.usage || null,
+        },
+      };
+    }
+
     const sdk = await loadSdk();
     const tools = target.id === "researcher" && sdk.webSearchTool
       ? [sdk.webSearchTool({ searchContextSize: "medium" })]
@@ -85,7 +145,7 @@ function createCrewChatService({
       },
       matchedAlias: match?.matchedAlias || null,
       history: compactHistory(history),
-      message: match?.remainder || message,
+      message: routedMessage,
       originalMessage: message,
     };
 
@@ -105,6 +165,7 @@ function createCrewChatService({
       },
       matchedAlias: match?.matchedAlias || null,
       reply: String(result.finalOutput),
+      artifacts: [],
       telemetry: {
         model: runtimeAgent.model,
         requests: Number(usage.requests || 0),
@@ -118,4 +179,10 @@ function createCrewChatService({
   return { chat };
 }
 
-module.exports = { createCrewChatService, compactHistory, ROLE_INSTRUCTIONS };
+module.exports = {
+  createCrewChatService,
+  compactHistory,
+  shouldGenerateImage,
+  buildImagePrompt,
+  ROLE_INSTRUCTIONS,
+};
