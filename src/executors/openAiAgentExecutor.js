@@ -5,6 +5,7 @@ function createOpenAiAgentExecutor({
   env = process.env,
   sdkLoader = () => import("@openai/agents"),
   budgetManager = createRunBudgetManager({ env }),
+  skillRegistry = null,
 } = {}) {
   let runtimePromise = null;
 
@@ -12,7 +13,7 @@ function createOpenAiAgentExecutor({
     if (!runtimePromise) {
       runtimePromise = sdkLoader().then(sdk => ({
         sdk,
-        definitions: buildAgentDefinitions({ Agent: sdk.Agent, webSearchTool: sdk.webSearchTool, env }),
+        definitions: buildAgentDefinitions({ Agent: sdk.Agent, webSearchTool: sdk.webSearchTool, env, skillRegistry }),
       }));
     }
     return runtimePromise;

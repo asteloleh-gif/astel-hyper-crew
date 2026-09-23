@@ -14,43 +14,54 @@ Do not publish, message users or call external mutation services.
 Return only the structured output required by your schema.
 `.trim();
 
-function buildAgentDefinitions({ Agent, webSearchTool, env = process.env } = {}) {
+function buildAgentDefinitions({ Agent, webSearchTool, env = process.env, skillRegistry = null } = {}) {
   const models = {
     reasoning: env.AI_MODEL_REASONING || "gpt-5.4-mini",
     standard: env.AI_MODEL_STANDARD || "gpt-5.4-mini",
     cheap: env.AI_MODEL_CHEAP || "gpt-5.4-nano",
   };
+  const brain = agentId => skillRegistry?.buildPermanentContext?.(agentId)?.context || "";
 
   return new Map([
     ["researcher", new Agent({
       name: "Tommy the Googler",
       model: models.reasoning,
-      instructions: `${COMMON_RULES}\nFind timely, relevant evidence for the objective. Use web search when fresh information is needed. Every factual finding must reference one or more returned source IDs. Return every source URL as a complete absolute http:// or https:// URL. If evidence is weak or unavailable, record the gap instead of guessing.`,
+      instructions: `${COMMON_RULES}
+${brain("researcher")}
+Find timely, relevant evidence for the objective. Use web search when fresh information is needed. Every factual finding must reference one or more returned source IDs. Return every source URL as a complete absolute http:// or https:// URL. If evidence is weak or unavailable, record the gap instead of guessing.`,
       tools: [webSearchTool({ searchContextSize: "medium" })],
       outputType: ResearchOutputSchema,
     })],
     ["strategist", new Agent({
       name: "George Big Brain",
       model: models.standard,
-      instructions: `${COMMON_RULES}\nTurn the supplied research into one focused content strategy. Use only claims supported by source IDs. Select platforms that fit the project and objective. Preserve the project's audience, brand and language constraints.`,
+      instructions: `${COMMON_RULES}
+${brain("strategist")}
+Turn the supplied research into one focused content strategy. Use only claims supported by source IDs. Select platforms that fit the project and objective. Preserve the project's audience, brand and language constraints.`,
       outputType: StrategyOutputSchema,
     })],
     ["copywriter", new Agent({
       name: "Sergio Contentmaker",
       model: models.standard,
-      instructions: `${COMMON_RULES}\nWrite compact, publishable platform variants from the approved strategy and research. Keep Oleg's direct conversational tone, strong hook and light irony when the project context allows it. Do not introduce new factual claims. On revision, follow every reviewer instruction.`,
+      instructions: `${COMMON_RULES}
+${brain("copywriter")}
+Write compact, publishable platform variants from the approved strategy and research. Keep Oleg's direct conversational tone, strong hook and light irony when the project context allows it. Do not introduce new factual claims. On revision, follow every reviewer instruction.`,
       outputType: CopyOutputSchema,
     })],
     ["reviewer", new Agent({
       name: "Hans QA",
       model: models.cheap,
-      instructions: `${COMMON_RULES}\nAudit the draft against the research and strategy. Check unsupported claims, wrong numbers, missing sources, platform fit, duplication, tone and safety. PASS only when the package is publishable after human approval. Use REVISE for repairable issues and REJECT for an unsafe or fundamentally unsupported concept.`,
+      instructions: `${COMMON_RULES}
+${brain("reviewer")}
+Audit the draft against the research and strategy. Check unsupported claims, wrong numbers, missing sources, platform fit, duplication, tone and safety. PASS only when the package is publishable after human approval. Use REVISE for repairable issues and REJECT for an unsafe or fundamentally unsupported concept.`,
       outputType: ReviewOutputSchema,
     })],
     ["distribution-manager", new Agent({
       name: "Luca Everywhere",
       model: models.standard,
-      instructions: `${COMMON_RULES}\nPrepare a DRAFT distribution plan for the reviewed content. Map Meta platforms to social-engine and Pinterest/YouTube/TikTok distribution work to distribution-engine. Use only existing copy variant indexes. Never claim that anything was published. Leave scheduledFor null unless the input explicitly provides a schedule.`,
+      instructions: `${COMMON_RULES}
+${brain("distribution-manager")}
+Prepare a DRAFT distribution plan for the reviewed content. Map Meta platforms to social-engine and Pinterest/YouTube/TikTok distribution work to distribution-engine. Use only existing copy variant indexes. Never claim that anything was published. Leave scheduledFor null unless the input explicitly provides a schedule.`,
       outputType: DistributionOutputSchema,
     })],
   ]);

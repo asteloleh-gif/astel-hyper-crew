@@ -1,6 +1,7 @@
 const { createApp } = require("./app");
 const { createProjectRegistry } = require("./registry/projectRegistry");
 const { createAgentRegistry } = require("./registry/agentRegistry");
+const { createSkillRegistry } = require("./registry/skillRegistry");
 const { createConnectorRegistry } = require("./registry/connectorRegistry");
 const { createInMemoryRunStore } = require("./storage/inMemoryRunStore");
 const { createPostgresRunStore } = require("./storage/postgresRunStore");
@@ -22,9 +23,10 @@ async function main() {
     onSave: agent => store.saveAgentProfile(agent),
   });
   const connectorRegistry = createConnectorRegistry();
-  const agentExecutor = createOpenAiAgentExecutor();
+  const skillRegistry = createSkillRegistry();
+  const agentExecutor = createOpenAiAgentExecutor({ skillRegistry });
   const imageGenerator = createImageGenerator();
-  const crewChatService = createCrewChatService({ agentRegistry, projectRegistry, imageGenerator });
+  const crewChatService = createCrewChatService({ agentRegistry, projectRegistry, skillRegistry, imageGenerator });
 
   const orchestrator = createHyperCrewOrchestrator({
     store,
@@ -38,6 +40,7 @@ async function main() {
     projectRegistry,
     agentRegistry,
     connectorRegistry,
+    skillRegistry,
     agentExecutor,
     crewChatService,
     apiToken: process.env.INTERNAL_API_TOKEN || "",

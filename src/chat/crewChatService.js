@@ -51,6 +51,7 @@ function buildImagePrompt({ project, history, message }) {
 function createCrewChatService({
   agentRegistry,
   projectRegistry,
+  skillRegistry = null,
   imageGenerator = null,
   env = process.env,
   sdkLoader = () => import("@openai/agents"),
@@ -84,6 +85,9 @@ function createCrewChatService({
     if (!target || target.enabled === false) throw new Error("CHAT_AGENT_UNAVAILABLE");
 
     const routedMessage = match?.remainder || message;
+    const skillContext = skillRegistry?.buildAgentContext
+      ? skillRegistry.buildAgentContext(target, routedMessage)
+      : { selectedSkills: [], context: "" };
 
     if (target.id === "visual" && shouldGenerateImage(routedMessage)) {
       if (!imageGenerator?.generate) throw new Error("IMAGE_GENERATOR_NOT_CONFIGURED");
@@ -116,14 +120,37 @@ function createCrewChatService({
     }
 
     const sdk = await loadSdk();
-    const tools = target.id === "researcher" && sdk.webSearchTool
-      ? [sdk.webSearchTool({ searchContextSize: "medium" })]
-      : [];
+    const tools = [];
+    const vectorStoreIds = String(env.ASTEL_KNOWLEDGE_VECTOR_STORE_ID || "")
+      .split(",")
+      .map(value => value.trim())
+      .filter(Boolean);
+    const fileSearchEnabled = Boolean(vectorStoreIds.length && sdk.fileSearchTool);
+    if (fileSearchEnabled) {
+      tools.push(sdk.fileSearchTool(vectorStoreIds, {
+        maxResults: Number(env.ASTEL_KNOWLEDGE_MAX_RESULTS || 5),
+      }));
+    }
+
+    const webSearchEnabled = Boolean(
+      target.id === "researcher"
+      && sdk.webSearchTool
+      && (
+        skillRegistry?.shouldUseWeb
+          ? skillRegistry.shouldUseWeb(target, routedMessage, skillContext.selectedSkills)
+          : true
+      )
+    );
+    if (webSearchEnabled) {
+      tools.push(sdk.webSearchTool({ searchContextSize: "medium" }));
+    }
 
     const instructions = [
       `You are ${target.name}, ${target.title || target.role}, inside Astel Hyper Crew.`,
       target.description || "",
       ROLE_INSTRUCTIONS[target.id] || "Help the owner with the task according to your role.",
+      skillContext.context || "",
+      "Use internal domain knowledge and activated skills before external search. Do not browse just to restate stable frameworks or methods already provided in your knowledge pack.",
       "This endpoint is conversational. Never claim that publishing, messaging, deployment, file mutation, image generation, or another external action happened unless an actual tool in this chat performed it.",
       "Reply in the language used by the owner unless they explicitly ask for another language.",
       "Be concise, practical and role-specific. Do not role-play unnecessary theatrics.",
@@ -159,6 +186,17 @@ function createCrewChatService({
       history: compactHistory(history),
       message: routedMessage,
       originalMessage: message,
+      activatedSkills: skillContext.selectedSkills.map(skill => ({
+        id: skill.id,
+        name: skill.name,
+        level: skill.level,
+        freshness: skill.freshness,
+      })),
+      knowledgePolicy: {
+        localFirst: true,
+        fileSearchEnabled,
+        webSearchEnabled,
+      },
     };
 
     const result = await sdk.run(runtimeAgent, JSON.stringify(payload), {
@@ -184,6 +222,9 @@ function createCrewChatService({
         inputTokens: Number(usage.inputTokens || 0),
         outputTokens: Number(usage.outputTokens || 0),
         totalTokens: Number(usage.totalTokens || 0),
+        activatedSkills: skillContext.selectedSkills.map(skill => skill.id),
+        fileSearchEnabled,
+        webSearchEnabled,
       },
     };
   }

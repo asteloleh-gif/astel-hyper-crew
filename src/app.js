@@ -5,6 +5,7 @@ function createApp({
   projectRegistry,
   agentRegistry,
   connectorRegistry,
+  skillRegistry,
   agentExecutor,
   crewChatService,
   apiToken = "",
@@ -27,6 +28,15 @@ function createApp({
 
   app.get("/v1/projects", (_req, res) => res.json({ projects: projectRegistry.list() }));
   app.get("/v1/agents", (_req, res) => res.json({ agents: agentRegistry.list() }));
+  app.get("/v1/skills", (_req, res) => res.json({ skills: skillRegistry?.list?.() || [] }));
+  app.get("/v1/agents/:id/profile", (req, res) => {
+    const agent = agentRegistry.get(req.params.id);
+    if (!agent) return res.status(404).json({ error: "NOT_FOUND" });
+    return res.json({
+      agent,
+      skillProfile: skillRegistry?.profileForAgent?.(agent) || null,
+    });
+  });
 
   app.post("/v1/agents/resolve", (req, res) => {
     const text = String(req.body?.text || "").trim();
