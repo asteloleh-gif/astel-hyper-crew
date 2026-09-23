@@ -78,11 +78,13 @@ function createSkillRegistry({ maxSelectedSkills = 4 } = {}) {
     return selectedSkills.some(skill => skill.freshness === "live" && EXPLICIT_WEB_RE.test(query));
   }
 
-  function buildAgentContext(agent, text) {
+  function buildAgentContext(agent, text, { allSkills = false } = {}) {
     if (!agent?.id) return { selectedSkills: [], context: "" };
     const profile = profileForAgent(agent.id);
     const pack = KNOWLEDGE_PACKS[agent.id];
-    const selectedSkills = selectForAgent(agent.id, text);
+    const selectedSkills = allSkills
+      ? (profile?.skills || []).map(skill => ({ ...skill, triggerScore: 0 }))
+      : selectForAgent(agent.id, text);
     if (!profile || !pack) return { selectedSkills, context: "" };
 
     const skillText = selectedSkills.map(skill => [
@@ -116,7 +118,12 @@ function createSkillRegistry({ maxSelectedSkills = 4 } = {}) {
     return { selectedSkills, context };
   }
 
-  return { get, list, profileForAgent, selectForAgent, shouldUseWeb, buildAgentContext };
+  function buildPermanentContext(agentOrId) {
+    const id = typeof agentOrId === "string" ? agentOrId : agentOrId?.id;
+    return buildAgentContext({ id }, "", { allSkills: true });
+  }
+
+  return { get, list, profileForAgent, selectForAgent, shouldUseWeb, buildAgentContext, buildPermanentContext };
 }
 
 module.exports = {
