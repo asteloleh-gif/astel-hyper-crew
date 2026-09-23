@@ -3,7 +3,7 @@ const { z } = require("zod");
 const SourceSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
-  url: z.string().url(),
+  // OpenAI Structured Outputs supports only a subset of JSON Schema.\n  // z.string().url() emits format: "uri", which response_format rejects.\n  // Keep the wire schema as a string and require absolute HTTP(S) URLs in the prompt.\n  url: z.string().min(1),
   publishedAt: z.string().nullable(),
   supportedClaims: z.array(z.string()),
 });
