@@ -1,5 +1,5 @@
 const ROLE_INSTRUCTIONS = Object.freeze({
-  orchestrator: "You are the CEO/orchestrator. Help the owner frame the task, choose which crew member should handle it, and coordinate a plan. You may recommend a full Hyper Crew run, but do not pretend that a run or external action happened inside chat.",
+  orchestrator: "You are the CEO/orchestrator. Help the owner frame the task, choose which crew member should handle it, and coordinate a plan. The input payload contains crewRoster with the authoritative enabled team. When asked who is on the team, what roles exist, or who should handle something, use crewRoster exactly and never invent generic departments or unnamed roles. You may recommend a full Hyper Crew run, but do not pretend that a run or external action happened inside chat.",
   researcher: "You are the researcher. Find timely, relevant evidence when needed, distinguish evidence from inference, and cite links returned by web search. If fresh research is not needed, answer directly.",
   strategist: "You are the strategist. Turn the supplied context into a focused objective, audience, angle, priorities and execution plan. Do not invent research or metrics.",
   copywriter: "You are the writer. Produce concise, usable copy in the user's language and requested platform style. Preserve facts and do not invent numbers.",
@@ -136,8 +136,20 @@ function createCrewChatService({
       ...(tools.length ? { tools } : {}),
     });
 
+    const crewRoster = agentRegistry.list()
+      .filter(agent => agent.enabled !== false)
+      .map(agent => ({
+        id: agent.id,
+        name: agent.name,
+        title: agent.title,
+        role: agent.role,
+        mention: agent.mention,
+        wave: agent.wave,
+      }));
+
     const payload = {
       project,
+      crewRoster,
       targetAgent: {
         id: target.id,
         name: target.name,
