@@ -3,7 +3,7 @@ const { AGENT_SKILL_PROFILES } = require("../skills/agentProfiles");
 const { KNOWLEDGE_PACKS } = require("../knowledge/knowledgePacks");
 
 const EXPLICIT_WEB_RE = /\b(latest|today|current|news|breaking|live|price|pricing now|search the web|google|github|source links?)\b|сегодня|сейчас|последн|свеж|новост|актуаль|цена сейчас|поищи в интернете|проверь в интернете|гугл|гитхаб|дай источники/i;
-const EXTERNAL_RESEARCH_RE = /\b(search|research|find sources?|competitors?|market scan|look up)\b|найди|поищи|исследуй|источник|конкурент|обзор рынка|что есть на рынке/i;
+const EXTERNAL_RESEARCH_RE = /\b(search|find sources?|look up|market scan|research (?:the|this|these|current|latest|market|company|competitor|product))\b|найди|поищи|дай источники|проверь в интернете|исследуй (?:рынок|компан|конкурент)|обзор рынка|что есть на рынке/i;
 
 function normalize(value) {
   return String(value || "").toLowerCase().replaceAll("ё", "е");
