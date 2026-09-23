@@ -5,6 +5,7 @@ function clone(value) {
 function createInMemoryRunStore() {
   const runs = new Map();
   const idempotency = new Map();
+  const agentProfiles = new Map();
   return {
     async init() {},
     async create(run) {
@@ -30,6 +31,13 @@ function createInMemoryRunStore() {
     },
     async list() {
       return [...runs.values()].map(clone);
+    },
+    async listAgentProfiles() {
+      return [...agentProfiles.values()].map(clone);
+    },
+    async saveAgentProfile(agent) {
+      agentProfiles.set(agent.id, clone(agent));
+      return clone(agent);
     },
   };
 }
