@@ -31,9 +31,10 @@ test("runs the crew in order and stops at human approval", async () => {
   const { orchestrator, calls } = fixture();
   const created = await orchestrator.createRun({ projectId: "astel-business", objective: "Prepare today's content" });
   const run = await orchestrator.start(created.id);
-  assert.deepEqual(calls, ["researcher", "strategist", "copywriter", "reviewer"]);
+  assert.deepEqual(calls, ["researcher", "strategist", "copywriter", "reviewer", "distribution-manager"]);
   assert.equal(run.status, "AWAITING_APPROVAL");
   assert.equal(run.approval.status, "PENDING");
+  assert.equal(run.approval.package.distributionPlan.producedBy, "distribution-manager");
 });
 
 test("approval resumes the run and invokes the operator once", async () => {

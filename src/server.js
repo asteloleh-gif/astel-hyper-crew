@@ -1,6 +1,7 @@
 const { createApp } = require("./app");
 const { createProjectRegistry } = require("./registry/projectRegistry");
 const { createAgentRegistry } = require("./registry/agentRegistry");
+const { createConnectorRegistry } = require("./registry/connectorRegistry");
 const { createInMemoryRunStore } = require("./storage/inMemoryRunStore");
 const { createPostgresRunStore } = require("./storage/postgresRunStore");
 const { createUnconfiguredAgentExecutor } = require("./executors/unconfiguredAgentExecutor");
@@ -13,13 +14,20 @@ async function main() {
   await store.init();
   const projectRegistry = createProjectRegistry();
   const agentRegistry = createAgentRegistry();
+  const connectorRegistry = createConnectorRegistry();
   const orchestrator = createHyperCrewOrchestrator({
     store,
     projectRegistry,
     agentRegistry,
     agentExecutor: createUnconfiguredAgentExecutor(),
   });
-  const app = createApp({ orchestrator, projectRegistry, agentRegistry, apiToken: process.env.INTERNAL_API_TOKEN || "" });
+  const app = createApp({
+    orchestrator,
+    projectRegistry,
+    agentRegistry,
+    connectorRegistry,
+    apiToken: process.env.INTERNAL_API_TOKEN || "",
+  });
   const port = Number(process.env.PORT || 3000);
   app.listen(port, () => console.log(`Astel Hyper Crew listening on ${port}`));
 }

@@ -19,6 +19,7 @@ Reject and failure are terminal. External mutation is only allowed after the non
 The service includes:
 
 - project and agent registries;
+- connector registry for Social Engine, Distribution Engine and Video Editor;
 - validated acyclic crew graph;
 - idempotent run creation;
 - resumable approval/rejection API;
@@ -26,6 +27,12 @@ The service includes:
 - PostgreSQL persistence with in-memory development fallback;
 - bearer authentication for internal APIs;
 - dry-run operator fallback.
+
+The pre-approval team is:
+
+`Researcher -> Strategist -> Copywriter -> Reviewer -> Distribution Manager -> Human Approval`
+
+Distribution Manager prepares the channel plan but cannot publish. The approval package contains the draft, review and distribution plan. Only the post-approval operator may call an execution engine.
 
 Agent execution is deliberately unconfigured in production V0.1. The next connector will implement the agents with the OpenAI Agents SDK or call an existing content runtime. This prevents placeholder text from being mistaken for real agent work.
 
@@ -35,6 +42,7 @@ Agent execution is deliberately unconfigured in production V0.1. The next connec
 GET  /health
 GET  /v1/projects
 GET  /v1/agents
+GET  /v1/connectors
 GET  /v1/runs
 GET  /v1/runs/:id
 POST /v1/runs

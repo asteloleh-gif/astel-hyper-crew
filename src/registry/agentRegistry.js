@@ -3,6 +3,12 @@ const DEFAULT_AGENTS = Object.freeze([
   { id: "strategist", role: "Content Strategist", modelTier: "standard" },
   { id: "copywriter", role: "Copywriter + Localizer", modelTier: "standard" },
   { id: "reviewer", role: "Content Reviewer", modelTier: "cheap" },
+  {
+    id: "distribution-manager",
+    role: "Distribution Manager",
+    modelTier: "standard",
+    responsibility: "Prepare a channel plan before approval; never publish autonomously",
+  },
 ]);
 
 function createAgentRegistry(agents = DEFAULT_AGENTS) {

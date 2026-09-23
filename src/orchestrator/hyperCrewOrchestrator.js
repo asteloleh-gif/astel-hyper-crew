@@ -57,7 +57,13 @@ function createHyperCrewOrchestrator({
     await store.save(run);
     let previous = { objective: run.objective, input: run.input };
     try {
-      for (const nodeId of [CREW_NODE.RESEARCHER, CREW_NODE.STRATEGIST, CREW_NODE.COPYWRITER, CREW_NODE.REVIEWER]) {
+      for (const nodeId of [
+        CREW_NODE.RESEARCHER,
+        CREW_NODE.STRATEGIST,
+        CREW_NODE.COPYWRITER,
+        CREW_NODE.REVIEWER,
+        CREW_NODE.DISTRIBUTION_MANAGER,
+      ]) {
         const agent = agentRegistry.get(nodeId);
         if (!agent) throw new Error(`Agent is not registered: ${nodeId}`);
         const startedAt = now();
@@ -70,7 +76,18 @@ function createHyperCrewOrchestrator({
         await store.save(run);
       }
       transition(run, RUN_STATUS.AWAITING_APPROVAL);
-      run.approval = { status: "PENDING", requestedAt: now(), decidedAt: null, decidedBy: null, note: null };
+      run.approval = {
+        status: "PENDING",
+        requestedAt: now(),
+        decidedAt: null,
+        decidedBy: null,
+        note: null,
+        package: {
+          draft: run.outputs[CREW_NODE.COPYWRITER],
+          review: run.outputs[CREW_NODE.REVIEWER],
+          distributionPlan: run.outputs[CREW_NODE.DISTRIBUTION_MANAGER],
+        },
+      };
       event(run, "approval.requested", { gate: CREW_NODE.HUMAN_APPROVAL });
       return store.save(run);
     } catch (error) {
