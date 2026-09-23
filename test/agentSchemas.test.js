@@ -1,6 +1,16 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { ReviewOutputSchema, DistributionOutputSchema } = require("../src/agents/schemas");
+const { z } = require("zod");
+const {
+  ResearchOutputSchema,
+  ReviewOutputSchema,
+  DistributionOutputSchema,
+} = require("../src/agents/schemas");
+
+test("research contract avoids unsupported URI format in structured outputs", () => {
+  const jsonSchema = z.toJSONSchema(ResearchOutputSchema);
+  assert.equal(JSON.stringify(jsonSchema).includes('"format":"uri"'), false);
+});
 
 test("review contract accepts explicit decisions", () => {
   const value = ReviewOutputSchema.parse({
