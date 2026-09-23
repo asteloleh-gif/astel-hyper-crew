@@ -23,6 +23,7 @@ The service includes:
 - curated permanent knowledge packs and role playbooks;
 - freshness-aware research policy so stable domain questions do not automatically browse;
 - optional OpenAI File Search vector knowledge via `ASTEL_KNOWLEDGE_VECTOR_STORE_ID`;
+- Edie Analytics Hub with normalized metrics, AI cost ledger, source freshness and read-only analyst tools;
 - connector registry for Social Engine, Distribution Engine and Video Editor;
 - validated acyclic crew graph;
 - idempotent run creation;
@@ -51,6 +52,13 @@ GET  /v1/agents
 GET  /v1/skills
 GET  /v1/agents/:id/profile
 GET  /v1/connectors
+GET  /v1/analytics/overview
+GET  /v1/analytics/costs
+GET  /v1/analytics/agents
+GET  /v1/analytics/content
+POST /v1/analytics/sync
+POST /v1/analytics/ingest
+POST /v1/analytics/bindings
 GET  /v1/runs
 GET  /v1/runs/:id
 POST /v1/runs
@@ -83,3 +91,8 @@ This keeps the initial system cheap, inspectable and compatible with the existin
 ## Skill Brains
 
 See [docs/SKILL_BRAINS.md](docs/SKILL_BRAINS.md) for the nine-agent hard/soft skill tree, local-first knowledge policy, freshness rules and optional vector-store integration.
+
+
+## Analytics Hub
+
+See [docs/ANALYTICS_HUB.md](docs/ANALYTICS_HUB.md) for Edie's storage model, cost rules, connectors and read-only tool surface.
