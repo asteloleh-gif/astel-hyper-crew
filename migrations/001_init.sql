@@ -14,3 +14,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS crew_runs_idempotency_key_unique
 
 CREATE INDEX IF NOT EXISTS crew_runs_project_status_idx
   ON crew_runs (project_id, status, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS crew_agent_profiles (
+  id TEXT PRIMARY KEY,
+  payload JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

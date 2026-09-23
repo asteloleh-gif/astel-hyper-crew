@@ -1,6 +1,6 @@
 {
   "name": "astel-hyper-crew",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Standalone orchestrator for the Astel Hyper Crew",
   "main": "src/server.js",

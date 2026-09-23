@@ -41,6 +41,20 @@ function createPostgresRunStore({ connectionString, pool = null } = {}) {
       const result = await db.query("SELECT payload FROM crew_runs ORDER BY created_at DESC LIMIT 100");
       return result.rows.map(row => row.payload);
     },
+    async listAgentProfiles() {
+      const result = await db.query("SELECT payload FROM crew_agent_profiles ORDER BY id");
+      return result.rows.map(row => row.payload);
+    },
+    async saveAgentProfile(agent) {
+      const result = await db.query(
+        `INSERT INTO crew_agent_profiles (id, payload, updated_at)
+         VALUES ($1, $2::jsonb, NOW())
+         ON CONFLICT (id) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()
+         RETURNING payload`,
+        [agent.id, JSON.stringify(agent)]
+      );
+      return result.rows[0].payload;
+    },
     async close() {
       await db.end();
     },

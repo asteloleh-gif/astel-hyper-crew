@@ -13,7 +13,7 @@ test("executes a registered role and exposes normalized telemetry", async () => 
     Agent: FakeAgent,
     webSearchTool: options => ({ type: "web_search", options }),
     async run(agent, input, options) {
-      assert.equal(agent.name, "Astel Researcher");
+      assert.equal(agent.name, "Tommy the Googler");
       assert.equal(options.maxTurns, 3);
       assert.equal(JSON.parse(input).objective, "Find trends");
       return {
