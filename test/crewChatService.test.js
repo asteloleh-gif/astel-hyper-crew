@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { createAgentRegistry } = require("../src/registry/agentRegistry");
 const { createProjectRegistry } = require("../src/registry/projectRegistry");
+const { createSkillRegistry } = require("../src/registry/skillRegistry");
 const { createCrewChatService, shouldGenerateImage } = require("../src/chat/crewChatService");
 
 class FakeAgent {
@@ -38,6 +39,7 @@ function fixture() {
   const service = createCrewChatService({
     agentRegistry: createAgentRegistry(),
     projectRegistry: createProjectRegistry(),
+    skillRegistry: createSkillRegistry(),
     imageGenerator,
     env: {
       OPENAI_API_KEY: "test-key",
@@ -120,4 +122,26 @@ test("Kevin receives the authoritative enabled crew roster", async () => {
   assert.ok(roster.some(agent => agent.name === "Tommy the Googler" && agent.id === "researcher"));
   assert.ok(roster.some(agent => agent.name === "Yuki Pixel" && agent.id === "visual"));
   assert.ok(roster.some(agent => agent.name === "Vasya Free Tier Hustler" && agent.id === "router-parser"));
+});
+
+
+test("Tommy uses local skill knowledge without web for evergreen methodology", async () => {
+  const { service, calls } = fixture();
+  const result = await service.chat({ text: "Томми объясни методику customer research" });
+  assert.equal(result.target.id, "researcher");
+  assert.equal(calls.length, 1);
+  assert.equal(Array.isArray(calls[0].agent.tools) ? calls[0].agent.tools.length : 0, 0);
+  assert.match(calls[0].agent.instructions, /Permanent domain knowledge/);
+  assert.match(calls[0].agent.instructions, /Customer Research/);
+  assert.equal(result.telemetry.webSearchEnabled, false);
+  assert.ok(result.telemetry.activatedSkills.includes("customer-research"));
+});
+
+test("skill context is selected for Sergio without external tools", async () => {
+  const { service, calls } = fixture();
+  const result = await service.chat({ text: "Серёга напиши короткий Threads пост с сильным хуком" });
+  assert.equal(result.target.id, "copywriter");
+  assert.match(calls[0].agent.instructions, /Social Content|Conversion Copywriting/);
+  assert.equal(result.telemetry.webSearchEnabled, false);
+  assert.ok(result.telemetry.activatedSkills.length > 0);
 });
