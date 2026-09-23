@@ -7,6 +7,7 @@ function createHyperCrewOrchestrator({
   projectRegistry,
   agentRegistry,
   agentExecutor,
+  analyticsService = null,
   operator,
   graph = DEFAULT_CREW_GRAPH,
   uuid = () => crypto.randomUUID(),
@@ -54,7 +55,20 @@ function createHyperCrewOrchestrator({
     });
     const envelope = result?.__agentExecution === true;
     const output = envelope ? result.output : result;
-    if (envelope) recordUsage(run, nodeId, result.telemetry);
+    if (envelope) {
+      recordUsage(run, nodeId, result.telemetry);
+      if (analyticsService?.recordAgentExecution) {
+        const latencyMs = Math.max(0, Date.now() - new Date(startedAt).getTime());
+        await analyticsService.recordAgentExecution({
+          runId: run.id,
+          projectId: run.projectId,
+          agentId: nodeId,
+          model: result.telemetry?.model,
+          telemetry: { ...result.telemetry, attempt },
+          latencyMs,
+        }).catch(error => event(run, "analytics.record.failed", { nodeId, attempt, message: error.message }));
+      }
+    }
     if (run.outputs[nodeId] !== undefined) {
       run.outputHistory[nodeId] = [...(run.outputHistory[nodeId] || []), run.outputs[nodeId]];
     }
