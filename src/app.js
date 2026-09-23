@@ -15,7 +15,7 @@ function createApp({
   app.get("/health", (_req, res) => res.json({
     status: "ok",
     service: "astel-hyper-crew",
-    version: "0.4.0",
+    version: "0.4.1",
     agents: agentExecutor?.health?.() || null,
   }));
 
