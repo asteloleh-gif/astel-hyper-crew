@@ -44,7 +44,7 @@ const SKILLS = Object.freeze([
     name: "Web Research",
     domain: "research",
     freshness: "live",
-    triggers: ["latest", "today", "current", "news", "search", "research", "найди", "поищи", "сейчас", "новости", "актуаль"],
+    triggers: ["latest", "today", "current", "news", "search", "найди", "поищи", "сейчас", "новости", "актуаль"],
     instructions: [
       "Search only when the request needs external or fresh evidence.",
       "Prefer primary/official sources, then reputable secondary sources; preserve dates and scope.",
