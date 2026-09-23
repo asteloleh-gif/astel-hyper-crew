@@ -6,7 +6,7 @@ function createApp({ orchestrator, projectRegistry, agentRegistry, connectorRegi
   app.get("/health", (_req, res) => res.json({
     status: "ok",
     service: "astel-hyper-crew",
-    version: "0.2.0",
+    version: "0.3.0",
     agents: agentExecutor?.health?.() || null,
   }));
   app.use("/v1", (req, res, next) => {
@@ -16,6 +16,16 @@ function createApp({ orchestrator, projectRegistry, agentRegistry, connectorRegi
   });
   app.get("/v1/projects", (_req, res) => res.json({ projects: projectRegistry.list() }));
   app.get("/v1/agents", (_req, res) => res.json({ agents: agentRegistry.list() }));
+  app.post("/v1/agents/resolve", (req, res) => {
+    const text = String(req.body?.text || "").trim();
+    if (!text) return res.status(400).json({ error: "TEXT_REQUIRED" });
+    const match = agentRegistry.resolveMention(text);
+    return res.json({ match });
+  });
+  app.patch("/v1/agents/:id", async (req, res, next) => {
+    try { res.json({ agent: await agentRegistry.update(req.params.id, req.body || {}) }); }
+    catch (e) { next(e); }
+  });
   app.get("/v1/connectors", (_req, res) => res.json({ connectors: connectorRegistry.list() }));
   app.get("/v1/runs", async (_req, res, next) => { try { res.json({ runs: await orchestrator.listRuns() }); } catch (e) { next(e); } });
   app.get("/v1/runs/:id", async (req, res, next) => { try { const run = await orchestrator.getRun(req.params.id); res.status(run ? 200 : 404).json(run || { error: "NOT_FOUND" }); } catch (e) { next(e); } });
