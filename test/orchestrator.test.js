@@ -5,13 +5,20 @@ const { createProjectRegistry } = require("../src/registry/projectRegistry");
 const { createAgentRegistry } = require("../src/registry/agentRegistry");
 const { createHyperCrewOrchestrator } = require("../src/orchestrator/hyperCrewOrchestrator");
 
-function fixture() {
+function fixture({ reviewDecisions = ["PASS"] } = {}) {
   const store = createInMemoryRunStore();
   const calls = [];
   const agentExecutor = {
     async execute({ agent, input }) {
       calls.push(agent.id);
-      return { producedBy: agent.id, previous: input.producedBy || null };
+      if (agent.id === "reviewer") {
+        return {
+          producedBy: agent.id,
+          decision: reviewDecisions.shift() || "PASS",
+          revisionInstructions: ["Tighten the hook"],
+        };
+      }
+      return { producedBy: agent.id, hasPriorOutputs: Boolean(input.priorOutputs) };
     },
   };
   const operator = { async execute({ idempotencyKey }) { return { status: "DRY_RUN", idempotencyKey }; } };
@@ -62,4 +69,25 @@ test("idempotency returns the original run", async () => {
   const second = await orchestrator.createRun({ projectId: "astel-business", objective: "Second", idempotencyKey: "telegram:42" });
   assert.equal(second.id, first.id);
   assert.equal(second.objective, "First");
+});
+
+test("reviewer can request one controlled revision loop", async () => {
+  const { orchestrator, calls } = fixture({ reviewDecisions: ["REVISE", "PASS"] });
+  const created = await orchestrator.createRun({ projectId: "astel-business", objective: "Prepare revised content" });
+  const run = await orchestrator.start(created.id);
+  assert.deepEqual(calls, [
+    "researcher", "strategist", "copywriter", "reviewer", "copywriter", "reviewer", "distribution-manager",
+  ]);
+  assert.equal(run.status, "AWAITING_APPROVAL");
+  assert.equal(run.outputHistory.copywriter.length, 1);
+  assert.equal(run.outputHistory.reviewer.length, 1);
+});
+
+test("review rejection fails before distribution", async () => {
+  const { orchestrator, calls } = fixture({ reviewDecisions: ["REJECT"] });
+  const created = await orchestrator.createRun({ projectId: "astel-business", objective: "Unsupported content" });
+  await assert.rejects(() => orchestrator.start(created.id), /CONTENT_REVIEW_REJECT/);
+  const run = await orchestrator.getRun(created.id);
+  assert.equal(run.status, "FAILED");
+  assert.equal(calls.includes("distribution-manager"), false);
 });

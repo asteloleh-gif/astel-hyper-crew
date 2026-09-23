@@ -1,6 +1,6 @@
 {
   "name": "astel-hyper-crew",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Standalone orchestrator for the Astel Hyper Crew",
   "main": "src/server.js",
@@ -12,7 +12,9 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@openai/agents": "^0.18.0",
     "express": "^5.1.0",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "zod": "^4.6.5"
   }
 }

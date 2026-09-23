@@ -29,6 +29,49 @@ function createHyperCrewOrchestrator({
     event(run, "run.status.changed", { status });
   }
 
+  function recordUsage(run, nodeId, telemetry = {}) {
+    const usage = run.usage;
+    const current = usage.byAgent[nodeId] || { requests: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+    for (const key of ["requests", "inputTokens", "outputTokens", "totalTokens"]) {
+      const value = Number(telemetry[key] || 0);
+      usage[key] += value;
+      current[key] += value;
+    }
+    current.model = telemetry.model || current.model || null;
+    usage.byAgent[nodeId] = current;
+  }
+
+  async function executeStage(run, nodeId, input, attempt = 1) {
+    const agent = agentRegistry.get(nodeId);
+    if (!agent) throw new Error(`Agent is not registered: ${nodeId}`);
+    const startedAt = now();
+    event(run, "stage.started", { nodeId, attempt });
+    const result = await agentExecutor.execute({
+      agent,
+      project: projectRegistry.get(run.projectId),
+      run,
+      input: { ...input, priorOutputs: run.outputs },
+    });
+    const envelope = result?.__agentExecution === true;
+    const output = envelope ? result.output : result;
+    if (envelope) recordUsage(run, nodeId, result.telemetry);
+    if (run.outputs[nodeId] !== undefined) {
+      run.outputHistory[nodeId] = [...(run.outputHistory[nodeId] || []), run.outputs[nodeId]];
+    }
+    run.outputs[nodeId] = output;
+    run.stages.push({
+      nodeId,
+      attempt,
+      status: "COMPLETED",
+      startedAt,
+      finishedAt: now(),
+      telemetry: envelope ? result.telemetry : null,
+    });
+    event(run, "stage.completed", { nodeId, attempt });
+    await store.save(run);
+    return output;
+  }
+
   async function createRun({ projectId, objective, idempotencyKey = null, input = {}, requestedBy = "oleg" } = {}) {
     const project = projectRegistry.get(projectId);
     if (!project) throw new Error(`Unknown project: ${projectId}`);
@@ -42,7 +85,8 @@ function createHyperCrewOrchestrator({
     const timestamp = now();
     const run = {
       id: uuid(), projectId: project.id, objective: cleanObjective, idempotencyKey: cleanKey,
-      requestedBy, status: RUN_STATUS.CREATED, input, outputs: {}, stages: [], events: [],
+      requestedBy, status: RUN_STATUS.CREATED, input, outputs: {}, outputHistory: {}, stages: [], events: [],
+      usage: { requests: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0, byAgent: {} },
       approval: null, execution: null, createdAt: timestamp, updatedAt: timestamp,
     };
     event(run, "run.created", { projectId: project.id });
@@ -55,26 +99,28 @@ function createHyperCrewOrchestrator({
     if (run.status !== RUN_STATUS.CREATED) return run;
     transition(run, RUN_STATUS.RUNNING);
     await store.save(run);
-    let previous = { objective: run.objective, input: run.input };
     try {
-      for (const nodeId of [
-        CREW_NODE.RESEARCHER,
-        CREW_NODE.STRATEGIST,
-        CREW_NODE.COPYWRITER,
-        CREW_NODE.REVIEWER,
-        CREW_NODE.DISTRIBUTION_MANAGER,
-      ]) {
-        const agent = agentRegistry.get(nodeId);
-        if (!agent) throw new Error(`Agent is not registered: ${nodeId}`);
-        const startedAt = now();
-        event(run, "stage.started", { nodeId });
-        const output = await agentExecutor.execute({ agent, project: projectRegistry.get(run.projectId), run, input: previous });
-        run.outputs[nodeId] = output;
-        run.stages.push({ nodeId, status: "COMPLETED", startedAt, finishedAt: now() });
-        event(run, "stage.completed", { nodeId });
-        previous = output;
-        await store.save(run);
+      const research = await executeStage(run, CREW_NODE.RESEARCHER, {
+        objective: run.objective,
+        suppliedResearch: run.input.research || [],
+      });
+      const strategy = await executeStage(run, CREW_NODE.STRATEGIST, { research });
+      let draft = await executeStage(run, CREW_NODE.COPYWRITER, { research, strategy });
+      let review = await executeStage(run, CREW_NODE.REVIEWER, { research, strategy, draft });
+
+      if (review?.decision === "REVISE") {
+        event(run, "review.revision.requested", { instructions: review.revisionInstructions || [] });
+        draft = await executeStage(run, CREW_NODE.COPYWRITER, { research, strategy, previousDraft: draft, review }, 2);
+        review = await executeStage(run, CREW_NODE.REVIEWER, { research, strategy, draft }, 2);
       }
+      if (review?.decision !== "PASS") throw new Error(`CONTENT_REVIEW_${review?.decision || "INVALID"}`);
+
+      await executeStage(run, CREW_NODE.DISTRIBUTION_MANAGER, {
+        strategy,
+        draft,
+        review,
+        requestedSchedule: run.input.schedule || null,
+      });
       transition(run, RUN_STATUS.AWAITING_APPROVAL);
       run.approval = {
         status: "PENDING",

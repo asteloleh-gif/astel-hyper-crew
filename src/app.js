@@ -1,9 +1,14 @@
 const express = require("express");
 
-function createApp({ orchestrator, projectRegistry, agentRegistry, connectorRegistry, apiToken = "" } = {}) {
+function createApp({ orchestrator, projectRegistry, agentRegistry, connectorRegistry, agentExecutor, apiToken = "" } = {}) {
   const app = express();
   app.use(express.json({ limit: "1mb" }));
-  app.get("/health", (_req, res) => res.json({ status: "ok", service: "astel-hyper-crew", version: "0.1.0" }));
+  app.get("/health", (_req, res) => res.json({
+    status: "ok",
+    service: "astel-hyper-crew",
+    version: "0.2.0",
+    agents: agentExecutor?.health?.() || null,
+  }));
   app.use("/v1", (req, res, next) => {
     if (!apiToken) return res.status(503).json({ error: "INTERNAL_API_TOKEN_NOT_CONFIGURED" });
     if (req.get("authorization") !== `Bearer ${apiToken}`) return res.status(401).json({ error: "UNAUTHORIZED" });

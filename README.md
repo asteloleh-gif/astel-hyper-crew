@@ -34,7 +34,9 @@ The pre-approval team is:
 
 Distribution Manager prepares the channel plan but cannot publish. The approval package contains the draft, review and distribution plan. Only the post-approval operator may call an execution engine.
 
-Agent execution is deliberately unconfigured in production V0.1. The next connector will implement the agents with the OpenAI Agents SDK or call an existing content runtime. This prevents placeholder text from being mistaken for real agent work.
+Agent execution uses the OpenAI Agents SDK with Zod-validated outputs. Researcher alone receives hosted web search; the other roles only transform the supplied, traceable evidence. Reviewer may request one controlled rewrite. A second non-PASS decision fails the run before Distribution Manager.
+
+Runtime cost is bounded per run with request and token ceilings. Defaults are 8 requests and 30,000 total reported tokens. Model names and limits are configurable through environment variables.
 
 ## API
 

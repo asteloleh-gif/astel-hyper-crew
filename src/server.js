@@ -4,7 +4,7 @@ const { createAgentRegistry } = require("./registry/agentRegistry");
 const { createConnectorRegistry } = require("./registry/connectorRegistry");
 const { createInMemoryRunStore } = require("./storage/inMemoryRunStore");
 const { createPostgresRunStore } = require("./storage/postgresRunStore");
-const { createUnconfiguredAgentExecutor } = require("./executors/unconfiguredAgentExecutor");
+const { createOpenAiAgentExecutor } = require("./executors/openAiAgentExecutor");
 const { createHyperCrewOrchestrator } = require("./orchestrator/hyperCrewOrchestrator");
 
 async function main() {
@@ -15,17 +15,19 @@ async function main() {
   const projectRegistry = createProjectRegistry();
   const agentRegistry = createAgentRegistry();
   const connectorRegistry = createConnectorRegistry();
+  const agentExecutor = createOpenAiAgentExecutor();
   const orchestrator = createHyperCrewOrchestrator({
     store,
     projectRegistry,
     agentRegistry,
-    agentExecutor: createUnconfiguredAgentExecutor(),
+    agentExecutor,
   });
   const app = createApp({
     orchestrator,
     projectRegistry,
     agentRegistry,
     connectorRegistry,
+    agentExecutor,
     apiToken: process.env.INTERNAL_API_TOKEN || "",
   });
   const port = Number(process.env.PORT || 3000);
