@@ -86,7 +86,7 @@ function createWindsorYouTubeAnalyticsConnector({
   const projectId = String(env.YOUTUBE_ANALYTICS_PROJECT_ID || "battle-box");
   const accountKey = String(env.YOUTUBE_ANALYTICS_ACCOUNT_KEY || "astel-family");
   const maxRows = Math.max(100, Math.min(10_000, Number(env.WINDSOR_YOUTUBE_MAX_ROWS || 5000)));
-  const refreshInterval = String(env.WINDSOR_REFRESH_INTERVAL || "6h");
+  const refreshInterval = String(env.WINDSOR_REFRESH_INTERVAL || "").trim();
 
   const fields = [
     "account_id",
@@ -123,9 +123,11 @@ function createWindsorYouTubeAnalyticsConnector({
         date_preset: `last_${safeDays}dT`,
         select_accounts: accountSelection,
         _max_rows: String(maxRows),
-        refresh_since: "3d",
-        refresh_interval: refreshInterval,
       });
+      if (refreshInterval) {
+        params.set("refresh_since", "3d");
+        params.set("refresh_interval", refreshInterval);
+      }
 
       const response = await fetchImpl(`https://connectors.windsor.ai/youtube?${params}`, {
         headers: { accept: "application/json" },
