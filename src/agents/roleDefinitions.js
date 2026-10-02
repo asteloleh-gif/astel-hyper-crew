@@ -3,6 +3,7 @@ const {
   StrategyOutputSchema,
   CopyOutputSchema,
   ReviewOutputSchema,
+  VisualOutputSchema,
   DistributionOutputSchema,
 } = require("./schemas");
 
@@ -55,6 +56,14 @@ Write compact, publishable platform variants from the approved strategy and rese
 ${brain("reviewer")}
 Audit the draft against the research and strategy. Check unsupported claims, wrong numbers, missing sources, platform fit, duplication, tone and safety. PASS only when the package is publishable after human approval. Use REVISE for repairable issues and REJECT for an unsafe or fundamentally unsupported concept.`,
       outputType: ReviewOutputSchema,
+    })],
+    ["visual", new Agent({
+      name: "Yuki Pixel",
+      model: models.standard,
+      instructions: `${COMMON_RULES}
+${brain("visual")}
+Turn the reviewed content into a concrete visual package for production. For short video, define the hook frame, shot order, on-screen text, treatment, reusable design assets and a concise editor handoff. Prefer fast reusable templates over decorative complexity. Use only source or scene hints supplied by the run; never invent footage, scene IDs, logos, character appearances or factual proof. For ASAP GTA6, assume Kevin is the editor and make the handoff immediately usable by him.`,
+      outputType: VisualOutputSchema,
     })],
     ["distribution-manager", new Agent({
       name: "Luca Everywhere",
