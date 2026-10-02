@@ -8,6 +8,8 @@ test("ships the named Hyper Crew roster", () => {
   assert.equal(agents.length, 9);
   assert.equal(registry.get("orchestrator").name, "Kevin CEO");
   assert.equal(registry.get("visual").name, "Yuki Pixel");
+  assert.equal(registry.get("visual").executable, true);
+  assert.equal(registry.get("visual").wave, "core");
   assert.equal(registry.get("analytics").name, "Edie Dataman");
   assert.equal(registry.get("router-parser").name, "Vasya Free Tier Hustler");
 });
