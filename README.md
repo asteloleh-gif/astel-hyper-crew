@@ -25,6 +25,8 @@ Operating rules:
 - External publication, destructive changes, credentials, billing and paid-service activation remain human-approved.
 - Cost is a first-class production metric. Every API-backed run must remain inside configured request/token budgets and should be avoided when expected value is lower than its cost.
 
+The internal `orchestrator` registry entry is **Astel Core — Hyper Crew Team Lead**. It coordinates only the Hyper Crew backend and must not be confused with the primary Kevin Dot.
+
 This repository is therefore a **backend/toolbox for Kevin**, not a competing top-level orchestrator.
 
 ## V0.1 flow
