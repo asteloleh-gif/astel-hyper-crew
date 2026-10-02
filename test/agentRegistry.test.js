@@ -6,7 +6,7 @@ test("ships the named Hyper Crew roster", () => {
   const registry = createAgentRegistry();
   const agents = registry.list();
   assert.equal(agents.length, 9);
-  assert.equal(registry.get("orchestrator").name, "Kevin CEO");
+  assert.equal(registry.get("orchestrator").name, "Astel Core");
   assert.equal(registry.get("visual").name, "Yuki Pixel");
   assert.equal(registry.get("visual").executable, true);
   assert.equal(registry.get("visual").wave, "core");
@@ -19,7 +19,8 @@ test("resolves English and Russian call signs at the start of chat input", () =>
   assert.equal(registry.resolveMention("Юки, сделай обложку").agent.id, "visual");
   assert.equal(registry.resolveMention("@yuki make three variants").agent.id, "visual");
   assert.equal(registry.resolveMention("Серёга перепиши под Threads").agent.id, "copywriter");
-  assert.equal(registry.resolveMention("Кевин собери команду").agent.id, "orchestrator");
+  assert.equal(registry.resolveMention("Astel Core собери команду").agent.id, "orchestrator");
+  assert.equal(registry.resolveMention("Кевин собери команду"), null);
   assert.equal(registry.resolveMention("Эдик посмотри аналитику").agent.id, "analytics");
   assert.equal(registry.resolveMention("обычный вопрос без обращения"), null);
 });
