@@ -3,6 +3,7 @@ const CREW_NODE = Object.freeze({
   STRATEGIST: "strategist",
   COPYWRITER: "copywriter",
   REVIEWER: "reviewer",
+  VISUAL: "visual",
   DISTRIBUTION_MANAGER: "distribution-manager",
   HUMAN_APPROVAL: "human-approval",
   OPERATOR: "operator",
@@ -13,10 +14,11 @@ const DEFAULT_CREW_GRAPH = Object.freeze([
   Object.freeze({ id: CREW_NODE.STRATEGIST, kind: "agent", dependsOn: [CREW_NODE.RESEARCHER] }),
   Object.freeze({ id: CREW_NODE.COPYWRITER, kind: "agent", dependsOn: [CREW_NODE.STRATEGIST] }),
   Object.freeze({ id: CREW_NODE.REVIEWER, kind: "agent", dependsOn: [CREW_NODE.COPYWRITER] }),
+  Object.freeze({ id: CREW_NODE.VISUAL, kind: "agent", dependsOn: [CREW_NODE.REVIEWER] }),
   Object.freeze({
     id: CREW_NODE.DISTRIBUTION_MANAGER,
     kind: "agent",
-    dependsOn: [CREW_NODE.REVIEWER],
+    dependsOn: [CREW_NODE.VISUAL],
   }),
   Object.freeze({
     id: CREW_NODE.HUMAN_APPROVAL,

@@ -129,10 +129,19 @@ function createHyperCrewOrchestrator({
       }
       if (review?.decision !== "PASS") throw new Error(`CONTENT_REVIEW_${review?.decision || "INVALID"}`);
 
+      const visual = await executeStage(run, CREW_NODE.VISUAL, {
+        research,
+        strategy,
+        draft,
+        review,
+        sourceAssets: run.input.sourceAssets || [],
+      });
+
       await executeStage(run, CREW_NODE.DISTRIBUTION_MANAGER, {
         strategy,
         draft,
         review,
+        visual,
         requestedSchedule: run.input.schedule || null,
       });
       transition(run, RUN_STATUS.AWAITING_APPROVAL);
@@ -145,6 +154,7 @@ function createHyperCrewOrchestrator({
         package: {
           draft: run.outputs[CREW_NODE.COPYWRITER],
           review: run.outputs[CREW_NODE.REVIEWER],
+          visualPlan: run.outputs[CREW_NODE.VISUAL],
           distributionPlan: run.outputs[CREW_NODE.DISTRIBUTION_MANAGER],
         },
       };

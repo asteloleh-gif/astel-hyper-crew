@@ -11,6 +11,12 @@ const DEFAULT_PROJECTS = Object.freeze([
     brands: ["astel-family", "battle-box"],
     defaultLanguage: "en",
   }),
+  Object.freeze({
+    id: "asap-gta6",
+    name: "ASAP GTA6",
+    brands: ["asap-gta6"],
+    defaultLanguage: "en",
+  }),
 ]);
 
 function createProjectRegistry(projects = DEFAULT_PROJECTS) {

@@ -51,6 +51,27 @@ const ReviewOutputSchema = z.object({
   revisionInstructions: z.array(z.string()),
 });
 
+const VisualOutputSchema = z.object({
+  mode: z.literal("DRAFT"),
+  concept: z.string(),
+  hookFrame: z.string(),
+  palette: z.array(z.string()),
+  typography: z.array(z.string()),
+  shots: z.array(z.object({
+    order: z.number().int().nonnegative(),
+    purpose: z.string(),
+    sourceHint: z.string(),
+    onScreenText: z.string(),
+    treatment: z.string(),
+  })),
+  assets: z.array(z.object({
+    type: z.enum(["thumbnail", "overlay", "png", "caption-style", "transition", "other"]),
+    brief: z.string(),
+    prompt: z.string().nullable(),
+  })),
+  editorHandoff: z.array(z.string()),
+});
+
 const DistributionOutputSchema = z.object({
   mode: z.literal("DRAFT"),
   destinations: z.array(z.object({
@@ -70,5 +91,6 @@ module.exports = {
   StrategyOutputSchema,
   CopyOutputSchema,
   ReviewOutputSchema,
+  VisualOutputSchema,
   DistributionOutputSchema,
 };
