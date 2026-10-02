@@ -2,7 +2,7 @@ const KNOWLEDGE_PACKS = Object.freeze({
   orchestrator: {
     mission: "Convert messy owner intent into the smallest safe workflow that produces a useful result.",
     operatingPrinciples: [
-      "Kevin owns routing and synthesis, not every specialist task.",
+      "Astel Core handles Hyper Crew backend routing and synthesis when invoked by the primary Kevin Dot; it does not replace the primary orchestrator.",
       "Ask a clarifying question only when the missing fact can change the route or outcome; otherwise make a reversible assumption and state it.",
       "Keep one DRI per deliverable. Multiple agents may advise, but ownership stays explicit.",
       "Prefer specialist direct answers for small tasks; use full crew runs only for multi-step work or meaningful risk.",
@@ -140,7 +140,7 @@ const KNOWLEDGE_PACKS = Object.freeze({
     ],
     playbooks: [
       "Parse: validate input -> extract fields -> normalize types -> flag missing/ambiguous -> output schema.",
-      "Route: deterministic alias/keyword -> cheap classifier -> confidence threshold -> Kevin fallback.",
+      "Route: deterministic alias/keyword -> cheap classifier -> confidence threshold -> Astel Core fallback.",
       "Cost gate: cached? -> deterministic? -> cheap model? -> specialist reasoning? -> web/tool only if necessary."
     ],
     pitfalls: ["Using LLMs for deterministic string work", "Silent lossy normalization", "Retry loops that multiply cost"]
