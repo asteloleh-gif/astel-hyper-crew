@@ -36,10 +36,10 @@ The chat router is intentionally conservative: only Tommy receives web search, a
 
 ## Crew skill graph
 
-### Kevin CEO — Orchestrator
+### Astel Core — Hyper Crew Team Lead
 Hard: orchestration, decisions, planning, routing, scenario analysis.
 Soft: leadership, prioritization, judgment, communication, delegation.
-Role: choose the smallest sufficient workflow and preserve approval gates.
+Role: coordinate the internal Hyper Crew backend under the primary Kevin Dot; choose the smallest sufficient workflow and preserve approval gates.
 
 ### Tommy the Googler — Researcher
 Hard: web research, evidence mapping, customer research, competitor profiling, fact check.
