@@ -4,6 +4,7 @@ const { z } = require("zod");
 const {
   ResearchOutputSchema,
   ReviewOutputSchema,
+  VisualOutputSchema,
   DistributionOutputSchema,
 } = require("../src/agents/schemas");
 
@@ -29,4 +30,26 @@ test("distribution contract cannot claim published mode", () => {
     destinations: [],
     warnings: [],
   }));
+});
+
+
+test("visual contract produces an editor-ready draft", () => {
+  const value = VisualOutputSchema.parse({
+    mode: "DRAFT",
+    concept: "Fast character fact",
+    hookFrame: "Character close-up with one-line hook",
+    palette: ["black", "white", "pink", "lime"],
+    typography: ["condensed bold"],
+    shots: [{
+      order: 0,
+      purpose: "hook",
+      sourceHint: "T2-S005",
+      onScreenText: "JASON WAS IN THE ARMY?",
+      treatment: "sharp proof window over soft moving background",
+    }],
+    assets: [],
+    editorHandoff: ["Keep the first cut under two seconds"],
+  });
+  assert.equal(value.mode, "DRAFT");
+  assert.equal(value.shots[0].purpose, "hook");
 });
