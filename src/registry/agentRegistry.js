@@ -1,12 +1,12 @@
 const DEFAULT_AGENTS = Object.freeze([
   Object.freeze({
     id: "orchestrator",
-    name: "Kevin CEO",
-    title: "Orchestrator",
-    role: "Orchestrator",
-    description: "Routes objectives, coordinates the crew and decides which workflow should run.",
-    mention: "@kevin",
-    aliases: ["kevin", "kevin ceo", "кевин", "кев", "кевин сео", "ceo", "босс"],
+    name: "Astel Core",
+    title: "Hyper Crew Team Lead",
+    role: "Hyper Crew Team Lead",
+    description: "Coordinates Hyper Crew backend roles and routes work requested by the primary Kevin Dot orchestrator.",
+    mention: "@astelcore",
+    aliases: ["astel core", "astelcore", "hyper crew team lead", "team lead", "team leader", "астел кор", "астелкор", "тимлид"],
     modelTier: "reasoning",
     wave: "core",
     enabled: true,
