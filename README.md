@@ -10,6 +10,23 @@ Standalone control plane for Oleg's AI team. It coordinates projects, agents, ap
 - **Astel Distribution Engine**: content distribution.
 - **Video Editor**: remains an independent Battle Box production tool.
 
+## Operating model — Kevin-first, cost-first
+
+**Kevin Dot is the primary orchestrator and the single user-facing control point.**
+Hyper Crew is subordinate infrastructure: Kevin may invoke individual Hyper Crew capabilities only when they add clear value.
+
+Operating rules:
+- Do not run the full multi-agent graph automatically for ordinary work.
+- Prefer ChatGPT/Dot capabilities, existing project context, local skills, stored knowledge, deterministic code and already-paid services before any metered OpenAI API call.
+- OpenAI API-backed Hyper Crew agent execution is optional and must fail closed when `OPENAI_API_KEY` is absent.
+- Use the minimum necessary Hyper Crew stage(s) for the task; avoid duplicate research, strategy, copy, review, visual or distribution calls when Kevin already has an acceptable result.
+- Edie analytics, registries, logs, connectors and deterministic utilities may operate without creating new LLM calls when their underlying source does not require them.
+- Yuki is a visual/distribution support capability for Kevin; Kevin remains responsible for the production decision and final video handoff.
+- External publication, destructive changes, credentials, billing and paid-service activation remain human-approved.
+- Cost is a first-class production metric. Every API-backed run must remain inside configured request/token budgets and should be avoided when expected value is lower than its cost.
+
+This repository is therefore a **backend/toolbox for Kevin**, not a competing top-level orchestrator.
+
 ## V0.1 flow
 
 `CREATED -> RUNNING -> AWAITING_APPROVAL -> APPROVED -> EXECUTING -> COMPLETED`
