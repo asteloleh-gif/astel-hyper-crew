@@ -80,11 +80,11 @@ test("Yuki can still discuss visuals without generating an image", async () => {
   assert.equal(calls.length, 1);
 });
 
-test("defaults unaddressed chat to Kevin", async () => {
+test("defaults unaddressed Hyper Crew chat to Astel Core", async () => {
   const { service } = fixture();
   const result = await service.chat({ text: "Что делаем дальше?" });
   assert.equal(result.target.id, "orchestrator");
-  assert.equal(result.target.name, "Kevin CEO");
+  assert.equal(result.target.name, "Astel Core");
 });
 
 test("Tommy receives web search and bounded history", async () => {
@@ -114,9 +114,9 @@ test("rejects chat without API key", async () => {
 });
 
 
-test("Kevin receives the authoritative enabled crew roster", async () => {
+test("Astel Core receives the authoritative enabled crew roster", async () => {
   const { service, calls } = fixture();
-  await service.chat({ text: "Кевин кто у нас в команде?" });
+  await service.chat({ text: "Astel Core кто у нас в команде?" });
   const roster = calls[0].input.crewRoster;
   assert.ok(Array.isArray(roster));
   assert.ok(roster.some(agent => agent.name === "Tommy the Googler" && agent.id === "researcher"));
