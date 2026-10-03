@@ -11,6 +11,17 @@ const DEFAULT_SERVICE_BINDINGS = Object.freeze([
     externalMutation: false,
   }),
   Object.freeze({
+    id: "openai-agent-runtime",
+    name: "OpenAI Agent Runtime",
+    agents: ["strategist", "copywriter", "reviewer"],
+    skills: ["positioning", "content-strategy", "go-to-market", "offer-design", "scenario-analysis", "decision-synthesis", "copywriting", "copy-editing", "social-content", "short-form-script", "localization", "fact-check", "adversarial-review", "rubric-evaluation", "evidence-mapping"],
+    capabilities: ["reasoning.generate", "copy.generate", "review.evaluate"],
+    access: "internal",
+    runtime: "wired",
+    costClass: "metered-ai",
+    externalMutation: false,
+  }),
+  Object.freeze({
     id: "openai-web-search",
     name: "OpenAI Hosted Web Search",
     agents: ["researcher"],
