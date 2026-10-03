@@ -39,6 +39,7 @@ The service includes:
 
 - project and agent registries;
 - local-first Skill Registry with hard/soft skill profiles for all nine crew members;
+- skill-to-service binding registry that declares which runtime/service actually powers each skill;
 - curated permanent knowledge packs and role playbooks;
 - freshness-aware research policy so stable domain questions do not automatically browse;
 - optional OpenAI File Search vector knowledge via `ASTEL_KNOWLEDGE_VECTOR_STORE_ID`;
@@ -69,6 +70,7 @@ GET  /health
 GET  /v1/projects
 GET  /v1/agents
 GET  /v1/skills
+GET  /v1/service-bindings
 GET  /v1/agents/:id/profile
 GET  /v1/connectors
 GET  /v1/analytics/overview
@@ -115,3 +117,16 @@ See [docs/SKILL_BRAINS.md](docs/SKILL_BRAINS.md) for the nine-agent hard/soft sk
 ## Analytics Hub
 
 See [docs/ANALYTICS_HUB.md](docs/ANALYTICS_HUB.md) for Edie's storage model, cost rules, connectors and read-only tool surface.
+
+
+## Skill-to-service bindings
+
+Skills are not treated as capabilities until a runtime/service binding exists. The registry separates:
+
+- `wired` — callable in the current Hyper Crew runtime;
+- `connector-only` — known service/capability, but not exposed as a chat tool yet;
+- `planned` — intended deterministic backend capability, not implemented yet.
+
+Current wired specialist services include Tommy web search, Yuki image generation and Edie Analytics Hub. Strategy/writing/review skills use the optional metered OpenAI agent runtime. Social/Distribution/Video connectors remain explicit bindings without pretending that execution is wired.
+
+External mutation capabilities retain an explicit approval requirement.
