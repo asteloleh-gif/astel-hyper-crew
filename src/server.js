@@ -3,6 +3,7 @@ const { createProjectRegistry } = require("./registry/projectRegistry");
 const { createAgentRegistry } = require("./registry/agentRegistry");
 const { createSkillRegistry } = require("./registry/skillRegistry");
 const { createConnectorRegistry } = require("./registry/connectorRegistry");
+const { createServiceBindingRegistry } = require("./registry/serviceBindingRegistry");
 const { createInMemoryRunStore } = require("./storage/inMemoryRunStore");
 const { createPostgresRunStore } = require("./storage/postgresRunStore");
 const { createOpenAiAgentExecutor } = require("./executors/openAiAgentExecutor");
@@ -50,6 +51,7 @@ async function main() {
   });
   const connectorRegistry = createConnectorRegistry();
   const skillRegistry = createSkillRegistry();
+  const serviceBindingRegistry = createServiceBindingRegistry();
   const agentExecutor = createOpenAiAgentExecutor({ skillRegistry });
   const imageGenerator = createImageGenerator();
   const crewChatService = createCrewChatService({ agentRegistry, projectRegistry, skillRegistry, analyticsService, imageGenerator });
@@ -68,6 +70,7 @@ async function main() {
     agentRegistry,
     connectorRegistry,
     skillRegistry,
+    serviceBindingRegistry,
     agentExecutor,
     crewChatService,
     analyticsService,
